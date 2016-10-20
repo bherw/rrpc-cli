@@ -19,7 +19,7 @@ method load(Int $id) {
 
 method load_all(:$order) {
 	$order = 'order by ' . $order if $order;
-	$self->_build($self->pg->db->query("select * from sermons $order"));
+	[ $self->_build($self->pg->db->query("select * from sermons $order")) ];
 }
 
 method load_by_identifier(Str $id) {
