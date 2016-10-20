@@ -6,18 +6,20 @@ use v5.14;
 
 extends 'App::RRPC';
 
-option 'only',
-	is => 'ro',
-	isa => 'ArrayRef[Str]';
-
-option 'metadata_only',
-	is => 'ro',
-	isa => 'Bool',
-	default => 0;
+option 'all',           is => 'rw', isa => 'Bool';
+option 'only',          is => 'ro', isa => 'ArrayRef[Str]';
+option 'metadata_only', is => 'ro', isa => 'Bool', default => 0;
 
 method run {
-	my $sermons = $self->load_metadata;
+	my $sermons;
 	my $metadata_only = $self->metadata_only;
+
+	if ($self->all) {
+		$sermons = $self->sermons->load_all(order => 'recorded_at');
+	}
+	else {
+		$sermons = $self->load_metadata;
+	}
 
 	# Validate source files.
 	for my $sermon (@$sermons) {
