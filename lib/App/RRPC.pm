@@ -1,6 +1,7 @@
 package App::RRPC;
 
 use Kavorka;
+use List::AllUtils qw(uniq);
 use MooseX::App qw(Color ConfigHome);
 use MooseX::AttributeShortcuts;
 use MooseX::RelatedClasses;
@@ -57,14 +58,14 @@ method load_metadata(ArrayRef $args?) {
 
 	if (!@$args) {
 		my @identifiers;
-		for (dir->children) {
-			if ($_->basename =~ /^(\d{4}-\d\d-\d\d)\.\w+$/) {
+		for ($self->base_dir->children) {
+			if ($_->basename =~ /^(\d{4}-\d\d-\d\d[AP]M)\.\w+$/) {
 				push @identifiers, $1;
 			}
 		}
 
-		for (@identifiers) {
-			push @sermons, $self->sermons->load($_)
+		for (uniq @identifiers) {
+			push @sermons, $self->sermons->load_by_identifier($_)
 				or say "no metadata found for $_, did you forget to import it?" and exit 1;
 		}
 	}
