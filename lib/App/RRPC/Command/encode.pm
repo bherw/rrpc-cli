@@ -26,7 +26,7 @@ method run {
 	}
 
 	for my $sermon (@$sermons) {
-		$sermon->mp3_file->move_to($outdir->file($self->mp3_prefix . $sermon->date . '.mp3'));
+		$sermon->mp3_file->move_to($outdir->file($self->mp3_prefix . $sermon->identifier . '.mp3'));
 	}
 }
 
