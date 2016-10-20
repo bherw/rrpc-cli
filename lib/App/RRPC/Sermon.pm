@@ -1,9 +1,11 @@
 package App::RRPC::Sermon;
+
 use aliased 'App::RRPC::TempFile';
 use aliased 'DateTime::Format::ISO8601';
 use App::RRPC::Util -all;
 use Audio::TagLib;
 use File::Temp;
+use JSON;
 use Kavorka;
 use Moose;
 use MooseX::AttributeShortcuts;
@@ -12,7 +14,6 @@ use MooseX::UndefTolerant;
 use namespace::sweep;
 use Path::Class;
 use POSIX qw(ceil);
-use JSON;
 use YAML;
 
 use common::sense;
@@ -57,7 +58,7 @@ has 'recorded_at',
 	isa => 'DateTime',
 	coerce => [
 		Str => sub {
-			use DateTime::Format::Pg;
+			require DateTime::Format::Pg;
 			DateTime::Format::Pg->parse_datetime($_)
 		},
 	],

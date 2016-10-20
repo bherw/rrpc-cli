@@ -1,11 +1,9 @@
 package App::RRPC::Command::encode;
 
-use v5.16;
-use IPC::Run ();
-use MooseX::App::Command;
 use Kavorka;
-use File::Temp ();
+use MooseX::App::Command;
 use Path::Class;
+use v5.14;
 
 extends 'App::RRPC';
 

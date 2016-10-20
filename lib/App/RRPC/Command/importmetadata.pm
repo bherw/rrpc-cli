@@ -1,8 +1,8 @@
 package App::RRPC::Command::importmetadata;
 
-use v5.14;
 use Kavorka;
 use MooseX::App::Command;
+use v5.14;
 
 extends 'App::RRPC';
 

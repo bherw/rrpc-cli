@@ -1,8 +1,8 @@
 package App::RRPC::Command::info;
 
-use v5.14;
-use MooseX::App::Command;
 use Kavorka;
+use MooseX::App::Command;
+use v5.14;
 
 extends 'App::RRPC';
 

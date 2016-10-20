@@ -1,13 +1,13 @@
 package App::RRPC;
 
-use v5.16;
-use MooseX::App qw(Color ConfigHome);
 use Kavorka;
+use MooseX::App qw(Color ConfigHome);
 use MooseX::AttributeShortcuts;
 use MooseX::RelatedClasses;
 use MooseX::Types::Path::Class qw(Dir);
-use Path::Class;
 use namespace::autoclean -except => 'new_with_command';
+use Path::Class;
+use v5.14;
 
 app_namespace 'App::RRPC::Command';
 

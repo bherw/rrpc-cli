@@ -1,8 +1,8 @@
 package App::RRPC::TempFile;
 
 use common::sense;
-use File::Temp;
 use File::Copy qw(move);
+use File::Temp;
 use parent 'Path::Class::File';
 
 sub new {
