@@ -72,10 +72,10 @@ method load_metadata(ArrayRef $args?) {
 	else {
 		for (@$args) {
 			if (-f $_) {
-				push @sermons, @{ $self->sermons->load_files($_) };
+				push @sermons, @{ $self->sermons->load_files([$_]) };
 			}
 			else {
-				push @sermons, $self->sermons->load($_)
+				push @sermons, $self->sermons->load_by_identifier($_)
 					or say "no metadata found for $_, did you forget to import it?" and exit 1;
 			}
 		}
