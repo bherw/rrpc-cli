@@ -129,8 +129,8 @@ has 'wav_file',
 
 method audio_file {
 	return $self->archive2_file if $self->has_archive2_file;
-	return $self->wave_file if $self->has_wav_file;
-	return $self->mp3_file if $self->has_mp3_file;
+	return $self->wav_file      if $self->has_wav_file;
+	return $self->mp3_file      if $self->has_mp3_file;
 	die "No audio file for @{[$self->identifier]} found";
 }
 
