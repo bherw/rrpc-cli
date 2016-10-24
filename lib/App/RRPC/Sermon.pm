@@ -198,21 +198,25 @@ method to_yaml {
 method upload(:$upload_file) {
 	my $app = $self->app;
 
-	$app->api->post('sermon', form => {
-		$upload_file
-			? (audio_file => {
-				file => $self->mp3_file,
-				filename => $app->mp3_prefix . $self->identifier . '.mp3'
-			})
-			: (audio_file => $app->audio_url_base . $self->identifier . '.mp3'),
+	my $audio_file = $upload_file
+		? {
+		file     => $self->mp3_file->stringify,
+		filename => $app->mp3_prefix . $self->identifier . '.mp3'
+		}
+		: $app->audio_url_base . $self->identifier . '.mp3';
 
-		audio_peaks_file => {
-			file => $self->audio_peaks_file->stringify,
-			filename => $self->identifier . '.peaks',
-		},
+	$app->api->post(
+		'sermon',
+		form => {
+			audio_file       => $audio_file,
+			audio_peaks_file => {
+				file     => $self->audio_peaks_file->stringify,
+				filename => $self->identifier . '.peaks',
+			},
 
-		map { ($_ => $self->$_)x!! $self->$_ } @METADATA_ATTRS, 'duration'
-	});
+			map { ($_ => $self->$_)x!!$self->$_ } @METADATA_ATTRS,
+			'duration'
+		});
 
 	return;
 }
