@@ -19,7 +19,8 @@ for my $method (qw(get post put delete)) {
 			$url->query->param(access_key => $self->access_key);
 		}
 		my $tx = $self->${ \"SUPER::$method" }($url, @_);
-		$tx->success or die "HTTP error: " . $tx->error->{message};
+		$tx->success or die "HTTP error: " . $tx->error->{message}
+			. "\n" . $tx->res->content->asset->slurp;
 	}
 }
 
