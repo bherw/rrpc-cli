@@ -20,7 +20,7 @@ related_class 'Pg', namespace => 'Mojo';
 has 'api',
 	is => 'lazy',
 	builder => method {
-		$self->api_class->new(api_base => $self->api_base, access_key => $self->api_key);
+		$self->api_class->new(api_base => $self->api_base, access_key => $self->api_key, inactivity_timeout => 0);
 	};
 
 has 'pg',
