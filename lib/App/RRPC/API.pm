@@ -3,6 +3,8 @@ package App::RRPC::API;
 use Moose;
 use MooseX::NonMoose;
 
+use common::sense;
+
 no strict 'refs';
 
 extends 'Mojo::UserAgent';
@@ -19,6 +21,7 @@ for my $method (qw(get post put delete)) {
 			$url->query->param(access_key => $self->access_key);
 		}
 		my $tx = $self->${ \"SUPER::$method" }($url, @_);
+		return if $tx->res->code == 404;
 		$tx->success or die "HTTP error: " . $tx->error->{message}
 			. "\n" . $tx->res->content->asset->slurp;
 	}
