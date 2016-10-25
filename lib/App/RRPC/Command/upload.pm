@@ -6,14 +6,12 @@ use v5.14;
 
 extends 'App::RRPC';
 
-option 'all',           is => 'rw', isa => 'Bool';
-option 'only',          is => 'ro', isa => 'ArrayRef[Str]';
-option 'metadata_only', is => 'ro', isa => 'Bool', default => 0;
+option 'all',       is => 'rw', isa => 'Bool';
+option 'always',    is => 'ro', isa => 'Bool', default => 0;
+option 'file_mode', is => 'ro', isa => 'Str',  default => 'upload';
 
 method run {
 	my $sermons;
-	my $metadata_only = $self->metadata_only;
-
 	if ($self->all) {
 		$sermons = $self->sermons->load_all(order => 'recorded_at');
 	}
@@ -23,14 +21,14 @@ method run {
 
 	# Validate source files.
 	for my $sermon (@$sermons) {
-		unless ($metadata_only || $sermon->has_wav_file) {
+		unless ($sermon->has_wav_file) {
 			say 'No source file found for ' . $sermon->date;
 			exit 1;
 		}
 	}
 
 	for my $sermon (@$sermons) {
-		$sermon->upload(upload_file => !$metadata_only);
+		$sermon->upload(always => $self->always, file_mode => $self->file_mode);
 	}
 }
 

@@ -38,8 +38,9 @@ has 'sermons',
 		$self->sermons_class->new(app => $self);
 	};
 
-option 'api_base', is => 'ro', lazy_required => 1;
-option 'api_key',  is => 'ro', lazy_required => 1;
+option 'api_base',             is => 'ro', lazy_required => 1;
+option 'api_key',              is => 'ro', lazy_required => 1;
+option 'api_sermon_files_dir', is => 'rw', isa           => Dir, coerce => 1, lazy_required => 1;
 option 'archive_dir',
 	is      => 'lazy',
 	isa     => Dir,

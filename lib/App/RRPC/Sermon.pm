@@ -14,6 +14,7 @@ use MooseX::UndefTolerant;
 use namespace::sweep;
 use Path::Class;
 use POSIX qw(ceil);
+use Scalar::Andand;
 use YAML;
 
 use common::sense;
@@ -195,28 +196,45 @@ method to_yaml {
 	return Dump $self->to_hash;
 }
 
-method upload(:$upload_file) {
+method upload(:$always, :$file_mode = 'upload') {
 	my $app = $self->app;
+	my $existing = $app->api->get('sermon/' . $self->identifier)->andand->json->{data}{sermon} // {}
+		unless $always;
+	my %set;
 
-	my $audio_file = $upload_file
-		? {
-		file     => $self->mp3_file->stringify,
-		filename => $app->mp3_prefix . $self->identifier . '.mp3'
+	if (!$existing->{audio_url} || $always) {
+		if ($file_mode eq 'upload') {
+			$set{audio_file} = {
+				file     => $self->mp3_file->stringify,
+				filename => $app->mp3_prefix . $self->identifier . '.mp3',
+			};
 		}
-		: $app->audio_url_base . $self->identifier . '.mp3';
+		elsif ($file_mode eq 'existing') {
+			$set{audio_file} = 'file://'
+				. $app->api_sermon_files_dir->file($app->mp3_prefix . $self->identifier . '.mp3');
+		}
+		elsif ($file_mode eq 'remote') {
+			$set{audio_file} = $app->audio_url_base . '/' . $self->identifier . '.mp3';
+		}
+		else {
+			die "Invalid file mode: $file_mode";
+		}
+	}
 
-	$app->api->post(
-		'sermon',
-		form => {
-			audio_file       => $audio_file,
-			audio_peaks_file => {
-				file     => $self->audio_peaks_file->stringify,
-				filename => $self->identifier . '.peaks',
-			},
+	if (!$existing->{audio_peaks_file} || $always) {
+		$set{audio_peaks_file} = {
+			file     => $self->audio_peaks_file->stringify,
+			filename => $self->identifier . '.peaks',
+		};
+	}
 
-			map { ($_ => $self->$_)x!!$self->$_ } @METADATA_ATTRS,
-			'duration'
-		});
+	for (@METADATA_ATTRS, 'duration') {
+		$set{$_} = $self->$_ if $existing->{$_} ne $self->$_ or $always;
+	}
+
+	return unless %set;
+
+	$app->api->post('sermon', form => { identifier => $self->identifier, %set });
 
 	return;
 }
