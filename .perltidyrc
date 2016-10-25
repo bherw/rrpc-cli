@@ -1,0 +1,17 @@
+-pbp
+-w
+--converge
+--nostandard-output
+-nola
+--maximum-line-length=100
+--entab-leading-whitespace=4 # Needed because continuation indentation won't use tabs.
+--tabs
+--vertical-tightness=0
+--vertical-tightness-closing=0
+--stack-all-containers
+--ignore-old-breakpoints
+--paren-tightness=2
+--nospace-for-semicolon
+--tight-secret-operators
+--noblanks-before-comments
+--maximum-consecutive-blank-lines=2
