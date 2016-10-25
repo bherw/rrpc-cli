@@ -21,8 +21,8 @@ method run {
 
 	# Validate source files.
 	for my $sermon (@$sermons) {
-		unless ($sermon->has_wav_file) {
-			say 'No source file found for ' . $sermon->date;
+		unless ($sermon->has_mp3_file) {
+			say 'No source file found for ' . $sermon->identifier;
 			exit 1;
 		}
 	}
