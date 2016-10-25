@@ -4,6 +4,7 @@ use Kavorka;
 use List::AllUtils qw(uniq);
 use MooseX::App qw(Color ConfigHome);
 use MooseX::AttributeShortcuts;
+use MooseX::LazyRequire;
 use MooseX::RelatedClasses;
 use MooseX::Types::Path::Class qw(Dir);
 use namespace::autoclean -except => 'new_with_command';
@@ -37,17 +38,21 @@ has 'sermons',
 		$self->sermons_class->new(app => $self);
 	};
 
-option 'api_base', is => 'ro', default => 'http://localhost:3000';
-option 'api_key', is => 'ro';
-option 'archive_dir', is => 'lazy', isa => Dir, coerce => 1, default => method { $self->base_dir->subdir('archive') };
+option 'api_base', is => 'ro', lazy_required => 1;
+option 'api_key',  is => 'ro', lazy_required => 1;
+option 'archive_dir',
+	is      => 'lazy',
+	isa     => Dir,
+	coerce  => 1,
+	default => method { $self->base_dir->subdir('archive') };
 option 'audio_peaks_resolution', is => 'ro', isa => 'Int', default => 4096;
-option 'audio_url_base', is => 'ro', default => 'http://sermons.russellrpc.org/audio/mp3/';
-option 'base_dir', is => 'ro', isa => Dir, coerce => 1, default => sub { dir };
-option 'default_speaker', is => 'ro', default => 'Matt Kingswood';
-option 'db_connection_string', is => 'ro', default => 'postgresql:///rrpc_cli';
-option 'mp3_album', is => 'ro', default => 'Russell RPC';
-option 'mp3_prefix', is => 'ro', default => 'rrpc-';
-option 'mp3_quality', is => 'ro', default => 5;
+option 'audio_url_base',       is => 'ro', lazy_required => 1;
+option 'base_dir',             is => 'ro', isa           => Dir, coerce => 1, default => sub {dir};
+option 'db_connection_string', is => 'ro', default       => 'postgresql:///rrpc_cli';
+option 'default_speaker',      is => 'ro', lazy_required => 1;
+option 'mp3_album',            is => 'ro', lazy_required => 1;
+option 'mp3_prefix',           is => 'ro', default       => '';
+option 'mp3_quality',          is => 'ro', default       => 5;
 
 method archive2_dir { $self->archive_dir->subdir('2-final') }
 method archived_mp3_dir { $self->archive_dir->subdir('mp3') }
