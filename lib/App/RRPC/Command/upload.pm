@@ -5,19 +5,13 @@ use MooseX::App::Command;
 use v5.14;
 
 extends 'App::RRPC';
+with 'App::RRPC::Role::SermonSelector';
 
-option 'all',       is => 'rw', isa => 'Bool';
 option 'always',    is => 'ro', isa => 'Bool', default => 0;
 option 'file_mode', is => 'ro', isa => 'Str',  default => 'upload';
 
 method run {
-	my $sermons;
-	if ($self->all) {
-		$sermons = $self->sermons->load_all(order => 'recorded_at');
-	}
-	else {
-		$sermons = $self->load_metadata;
-	}
+	my $sermons = $self->selected_sermons;
 
 	# Validate source files.
 	for my $sermon (@$sermons) {

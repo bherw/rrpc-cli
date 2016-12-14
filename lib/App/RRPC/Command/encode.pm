@@ -6,6 +6,7 @@ use Path::Class;
 use v5.14;
 
 extends 'App::RRPC';
+with 'App::RRPC::Role::SermonSelector';
 
 option 'output_dir',
 	is => 'ro',
@@ -14,11 +15,11 @@ option 'output_dir',
 	cmd_flag => 'output-dir';
 
 method run {
-	my $sermons = $self->load_metadata;
 	require Parallel::ForkManager;
 	require Sys::CPU;
 
 	my $outdir  = dir($self->output_dir);
+	my $sermons = $self->selected_sermons;
 
 	# Validate source files.
 	for my $sermon (@$sermons) {

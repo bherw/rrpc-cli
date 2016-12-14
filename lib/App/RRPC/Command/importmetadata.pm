@@ -5,11 +5,12 @@ use MooseX::App::Command;
 use v5.14;
 
 extends 'App::RRPC';
+with 'App::RRPC::Role::SermonSelector';
 
 method run {
 	my $term;
 
-	for my $sermon (@{ $self->load_metadata }) {
+	for my $sermon (@{ $self->selected_sermons }) {
 		my $old = $self->sermons->load_by_identifier($sermon->identifier);
 
 		if ($old && $old ne $sermon) {

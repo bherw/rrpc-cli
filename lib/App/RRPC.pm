@@ -1,7 +1,6 @@
 package App::RRPC;
 
 use Kavorka;
-use List::AllUtils qw(uniq);
 use MooseX::App qw(Color ConfigHome);
 use MooseX::AttributeShortcuts;
 use MooseX::LazyRequire;
@@ -57,39 +56,6 @@ option 'mp3_quality',          is => 'ro', default       => 5;
 
 method archive2_dir { $self->archive_dir->subdir('2-final') }
 method archived_mp3_dir { $self->archive_dir->subdir('mp3') }
-
-method load_metadata(ArrayRef $args?) {
-	$args //= $self->extra_argv;
-	my @sermons;
-
-	if (!@$args) {
-		my @identifiers;
-		for ($self->base_dir->children) {
-			if ($_->basename =~ /^(\d{4}-\d\d-\d\d[AP]M)\.\w+$/) {
-				push @identifiers, $1;
-			}
-		}
-
-		for (uniq @identifiers) {
-			push @sermons, $self->sermons->load_by_identifier($_)
-				or say "no metadata found for $_, did you forget to import it?" and exit 1;
-		}
-	}
-	else {
-		for (@$args) {
-			if (-f $_) {
-				push @sermons, @{ $self->sermons->load_files([$_]) };
-			}
-			else {
-				push @sermons, $self->sermons->load_by_identifier($_)
-					or say "no metadata found for $_, did you forget to import it?" and exit 1;
-			}
-		}
-	}
-
-	say "No sermons specified." and exit 1 unless @sermons;
-	\@sermons;
-}
 
 method upload_sermons(\@sermons, :$upload_files = 1) {
 	if ($upload_files) {
