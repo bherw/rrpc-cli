@@ -198,43 +198,41 @@ method to_yaml {
 
 method upload(:$always, :$file_mode = 'upload') {
 	my $app = $self->app;
-	my $existing = $app->api->get('sermon/' . $self->identifier)->andand->json->{data}{sermon} // {}
-		unless $always;
+	my $existing = $app->api->get('sermon/' . $self->identifier)->andand->{data} // {};
 	my %set;
 
 	if (!$existing->{audio_url} || $always) {
 		if ($file_mode eq 'upload') {
-			$set{audio_file} = {
+			$set{audio} = {
 				file     => $self->mp3_file->stringify,
 				filename => $app->mp3_prefix . $self->identifier . '.mp3',
 			};
 		}
 		elsif ($file_mode eq 'existing') {
-			$set{audio_file} = 'file://'
+			$set{audio} = 'file://'
 				. $app->api_sermon_files_dir->file($app->mp3_prefix . $self->identifier . '.mp3');
 		}
 		elsif ($file_mode eq 'remote') {
-			$set{audio_file} = $app->audio_url_base . '/' . $self->identifier . '.mp3';
+			$set{audio} = $app->audio_url_base . '/' . $self->identifier . '.mp3';
 		}
 		else {
 			die "Invalid file mode: $file_mode";
 		}
 	}
 
-	if (!$existing->{audio_peaks_file} || $always) {
-		$set{audio_peaks_file} = {
-			file     => $self->audio_peaks_file->stringify,
-			filename => $self->identifier . '.peaks',
-		};
-	}
-
-	for (@METADATA_ATTRS, 'duration') {
+	for (@METADATA_ATTRS) {
 		$set{$_} = $self->$_ if $existing->{$_} ne $self->$_ or $always;
 	}
 
 	return unless %set;
 
-	$app->api->post('sermon', form => { identifier => $self->identifier, %set });
+	$set{identifier} = $self->identifier;
+	if (keys %$existing) {
+		$app->api->patch('sermon/' . $self->identifier, form => \%set);
+	}
+	else {
+		$app->api->post('sermon', form => \%set);
+	}
 
 	return;
 }
