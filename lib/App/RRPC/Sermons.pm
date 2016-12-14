@@ -14,16 +14,16 @@ has 'app', is => 'ro', isa => 'App::RRPC', required => 1, weak_ref => 1;
 has 'pg',  is => 'rw', isa => 'Mojo::Pg',  required => 1, default  => sub { shift->app->pg };
 
 method load(Int $id) {
-	return $self->_load('id', $id);
+	return $self->where('id = ?', $id);
 }
 
 method load_all(:$order) {
 	$order = 'order by ' . $order if $order;
-	[ $self->_build($self->pg->db->query("select * from sermons $order")) ];
+	return $self->_build($self->pg->db->query("select * from sermons $order"));
 }
 
 method load_by_identifier(Str $id) {
-	return $self->_load('identifier', $id);
+	return $self->where('identifier = ?', $id)->[0];
 }
 
 method load_files(\@files) {
@@ -53,16 +53,16 @@ method to_yaml(\@sermons) {
 	return Dump [ map { $_->to_hash } @sermons ];
 }
 
+method where($clause, @replace) {
+	return $self->_build($self->pg->db->query("select * from sermons where $clause", @replace));
+}
+
 method _build($query) {
 	my @sermons;
 	while (my $hash = $query->hash) {
 		push @sermons, $self->sermon_class->new(app => $self->app, %$hash);
 	}
-	wantarray ? @sermons : $sermons[0];
-}
-
-method _load($type, $id) {
-	return $self->_build($self->pg->db->query("select * from sermons where $type = ?", $id));
+	\@sermons;
 }
 
 method _load_file($file) {
