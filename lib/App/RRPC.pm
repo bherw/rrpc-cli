@@ -54,6 +54,7 @@ option 'mp3_album',            is => 'ro', lazy_required => 1;
 option 'mp3_prefix',           is => 'ro', default       => '';
 option 'mp3_quality',          is => 'ro', default       => 5;
 
+method archive0_dir { $self->archive_dir->subdir('0-raw') }
 method archive2_dir { $self->archive_dir->subdir('2-final') }
 method archived_mp3_dir { $self->archive_dir->subdir('mp3') }
 
