@@ -18,7 +18,7 @@ method load(Int $id) {
 	return $self->where('id = ?', $id);
 }
 
-method load_all(:$order) {
+method load_all(Maybe[Str] :$order?) {
 	$order = 'order by ' . $order if $order;
 	return $self->_build($self->pg->db->query("select * from sermons $order"));
 }
@@ -54,7 +54,7 @@ method to_yaml(\@sermons) {
 	return Dump [ map { $_->to_hash } @sermons ];
 }
 
-method where($clause, @replace) {
+method where(Str $clause, @replace) {
 	return $self->_build($self->pg->db->query("select * from sermons where $clause", @replace));
 }
 

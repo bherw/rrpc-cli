@@ -53,8 +53,8 @@ has 'duration',
 
 my $PgDateTime = class_type('DateTime')
 	->plus_coercions(Str, sub {
-			require DateTime::Format::Pg;
-			DateTime::Format::Pg->parse_datetime($_)
+		require DateTime::Format::Pg;
+		DateTime::Format::Pg->parse_datetime($_)
 	});
 
 has 'recorded_at',
@@ -150,7 +150,7 @@ method cmp($other, $swap?) {
 	return 0;
 }
 
-method from_txt($class: $app, $text, %attr) {
+method from_txt($class: $app, Str $text, %attr) {
 	my @s = split /\r?\n/, $text;
 	%attr = (
 		app => $app,
@@ -197,7 +197,7 @@ method to_yaml {
 	YAML::Dump($self->to_hash)
 }
 
-method upload(:$always, :$file_mode = 'upload') {
+method upload(Bool :$always = 0, Enum[qw(upload existing remote)] :$file_mode = 'upload') {
 	my $app = $self->app;
 	my $existing = $app->api->get('sermon/' . $self->identifier)->andand->{data} // {};
 	my %set;
