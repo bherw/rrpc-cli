@@ -1,23 +1,18 @@
 package App::RRPC::Sermon;
 
-use aliased 'App::RRPC::TempFile';
 use aliased 'DateTime::Format::ISO8601';
 use App::RRPC::Util -all;
-use Audio::TagLib;
-use File::Temp;
-use JSON;
 use Kavorka;
-use Moose;
-use MooseX::AttributeShortcuts;
-use MooseX::StrictConstructor;
-use MooseX::UndefTolerant;
-use namespace::sweep;
-use Path::Class;
+use Moo;
+use MooX::StrictConstructor;
+use namespace::autoclean;
+use Params::Util qw(_INSTANCE);
+use Path::Tiny;
 use POSIX qw(ceil);
 use Scalar::Andand;
-use YAML;
+use Type::Utils qw(class_type);
+use Types::Standard qw(Maybe Bool Int Str);
 
-use common::sense;
 use overload
 	bool => sub { 1 },
 	'cmp' => sub { shift->cmp(@_) };
@@ -28,11 +23,11 @@ my @METADATA_ATTRS = qw(
 );
 
 has 'app', is => 'rw', weak_ref => 1, required => 1;
-has 'id', is => 'rw', isa => 'Int';
-has 'identifier', is => 'rw', isa => 'Str', required => 1;
-has [qw(scripture_reading title)], is => 'rw', isa => 'Str', required => 1;
-has [qw(scripture_focus series)], is => 'rw', isa => 'Str';
-has 'scripture_reading_might_be_focus', is => 'rw', isa => 'Bool', default => 0;
+has 'id', is => 'rw', isa => Int;
+has 'identifier', is => 'rw', isa => Str, required => 1;
+has [qw(scripture_reading title)], is => 'rw', isa => Str, required => 1;
+has [qw(scripture_focus series)], is => 'rw', isa => Maybe[Str];
+has 'scripture_reading_might_be_focus', is => 'rw', isa => Bool, default => 0;
 
 has 'audio_peaks_file',
 	is => 'lazy',
@@ -43,6 +38,7 @@ has 'audio_peaks_file',
 			-o => $tmpfile,
 			'--pixels-per-second' => ceil $self->app->audio_peaks_resolution / $self->duration
 		);
+		require JSON;
 		my $json = JSON->new->decode($tmpfile->slurp);
 		$tmpfile->spew(pack 's*', @{$json->{data}});
 		$tmpfile;
@@ -51,18 +47,20 @@ has 'audio_peaks_file',
 has 'duration',
 	is => 'lazy',
 	builder => method {
+		require Audio::TagLib;
 		Audio::TagLib::FileRef->new($self->audio_file->stringify)->audioProperties->length
 	};
 
-has 'recorded_at',
-	is => 'lazy',
-	isa => 'DateTime',
-	coerce => [
-		Str => sub {
+my $PgDateTime = class_type('DateTime')
+	->plus_coercions(Str, sub {
 			require DateTime::Format::Pg;
 			DateTime::Format::Pg->parse_datetime($_)
-		},
-	],
+	});
+
+has 'recorded_at',
+	is => 'lazy',
+	isa => $PgDateTime,
+	coerce => 1,
 	builder => method {
 		local $_ = $self->identifier;
 		/^\d{4}-\d\d-\d\d[AP]M$/
@@ -74,7 +72,7 @@ has 'recorded_at',
 
 has 'speaker',
 	is => 'lazy',
-	isa => 'Str',
+	isa => Str,
 	default => method { $self->app->default_speaker };
 
 has 'archive2_file',
@@ -93,7 +91,8 @@ has 'mp3_file',
 		my $path = $self->mp3_file_path;
 
 		if (!-f $path) {
-			$path = TempFile->new;
+			require App::RRPC::TempFile;
+			$path = App::RRPC::TempFile->new;
 			my $wav = $self->wav_file;
 
 			lame(
@@ -118,7 +117,8 @@ has 'wav_file',
 		my $path = $self->wav_file_path;
 		
 		if (!-f $path) {
-			$path = TempFile->new;
+			require App::RRPC::TempFile;
+			$path = App::RRPC::TempFile->new;
 			my $archive2 = $self->archive2_file;
 
 			# Decode flac, overwriting the empty temp file.
@@ -136,13 +136,14 @@ method audio_file {
 }
 
 method archive2_file_path {
-	return $self->app->archive2_dir->file($self->identifier . '.flac');
+	return $self->app->archive2_dir->child($self->identifier . '.flac');
 }
 
 method cmp($other, $swap?) {
-	return 1 unless blessed $other && $other->isa(__PACKAGE__);
+	return 1 unless _INSTANCE $other, __PACKAGE__;
 
 	for my $attr (@METADATA_ATTRS) {
+		no warnings 'uninitialized';
 		my $cmp = $self->$attr cmp $other->$attr;
 		return $swap ? $cmp * -1 : $cmp if $cmp != 0;
 	}
@@ -184,8 +185,8 @@ method has_archive2_file {
 
 method mp3_file_path {
 	my $app = $self->app;
-	my $archived = $app->archived_mp3_dir->file($self->identifier . '.mp3');
-	-f $archived ? $archived : $app->base_dir->file($app->mp3_prefix . $self->identifier . '.mp3');
+	my $archived = $app->archived_mp3_dir->child($self->identifier . '.mp3');
+	-f $archived ? $archived : $app->base_dir->child($app->mp3_prefix . $self->identifier . '.mp3');
 }
 
 method to_hash {
@@ -193,7 +194,8 @@ method to_hash {
 }
 
 method to_yaml {
-	return Dump $self->to_hash;
+	require YAML;
+	YAML::Dump($self->to_hash)
 }
 
 method upload(:$always, :$file_mode = 'upload') {
@@ -238,7 +240,5 @@ method upload(:$always, :$file_mode = 'upload') {
 }
 
 method wav_file_path {
-	return $self->app->base_dir->file($self->identifier . '.wav');
+	return $self->app->base_dir->child($self->identifier . '.wav');
 }
-
-__PACKAGE__->meta->make_immutable;

@@ -4,23 +4,27 @@ use Kavorka;
 use MooseX::App qw(Color ConfigHome);
 use MooseX::AttributeShortcuts;
 use MooseX::LazyRequire;
-use MooseX::RelatedClasses;
-use MooseX::Types::Path::Class qw(Dir);
+use MooX::RelatedClasses;
+use Types::Path::Tiny qw(Path);
+use Path::Tiny;
 use namespace::autoclean -except => 'new_with_command';
-use Path::Class;
 use v5.14;
 
 app_namespace 'App::RRPC::Command';
 
 related_class [qw(Sermons)];
-related_class { 'API' => 'api' };
-related_class { 'File' => 'asset'}, namespace => 'Mojo::Asset';
+related_class {API => 'api'};
+related_class { '+Mojo::Asset::File' => 'asset'};
 related_class 'Pg', namespace => 'Mojo';
 
 has 'api',
 	is => 'lazy',
 	builder => method {
-		$self->api_class->new(api_base => $self->api_base, access_key => $self->api_key, inactivity_timeout => 0);
+		$self->api_class->new(
+			api_base => $self->api_base,
+			access_key => $self->api_key,
+			inactivity_timeout => 0,
+		);
 	};
 
 has 'pg',
@@ -39,24 +43,25 @@ has 'sermons',
 
 option 'api_base',             is => 'ro', lazy_required => 1;
 option 'api_key',              is => 'ro', lazy_required => 1;
-option 'api_sermon_files_dir', is => 'rw', isa           => Dir, coerce => 1, lazy_required => 1;
+option 'api_sermon_files_dir', is => 'rw', isa           => Path, coerce => 1, lazy_required => 1;
 option 'archive_dir',
 	is      => 'lazy',
-	isa     => Dir,
+	isa     => Path,
 	coerce  => 1,
-	default => method { $self->base_dir->subdir('archive') };
+	default => method { $self->base_dir->child('archive') };
 option 'audio_peaks_resolution', is => 'ro', isa => 'Int', default => 4096;
 option 'audio_url_base',       is => 'ro', lazy_required => 1;
-option 'base_dir',             is => 'ro', isa           => Dir, coerce => 1, default => sub {dir};
+option 'base_dir',             is => 'ro', isa           => Path, coerce => 1, default => sub { path('.') };
 option 'db_connection_string', is => 'ro', default       => 'postgresql:///rrpc_cli';
 option 'default_speaker',      is => 'ro', lazy_required => 1;
 option 'mp3_album',            is => 'ro', lazy_required => 1;
 option 'mp3_prefix',           is => 'ro', default       => '';
 option 'mp3_quality',          is => 'ro', default       => 5;
 
-method archive0_dir { $self->archive_dir->subdir('0-raw') }
-method archive2_dir { $self->archive_dir->subdir('2-final') }
-method archived_mp3_dir { $self->archive_dir->subdir('mp3') }
+method archive0_dir { $self->archive_dir->child('0-raw') }
+method archive1_dir { $self->archive_dir->child('1-cut') }
+method archive2_dir { $self->archive_dir->child('2-final') }
+method archived_mp3_dir { $self->archive_dir->child('mp3') }
 
 method upload_sermons(\@sermons, :$upload_files = 1) {
 	if ($upload_files) {

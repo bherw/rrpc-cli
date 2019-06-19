@@ -2,16 +2,17 @@ package App::RRPC::Sermons;
 
 use Encode qw(decode_utf8);
 use Kavorka;
-use Moose;
-use MooseX::RelatedClasses;
+use Moo;
+use MooX::RelatedClasses;
 use namespace::autoclean;
-use Path::Class;
+use Type::Utils qw(class_type);
+use Types::Path::Tiny qw(Path);
 use YAML;
 
 related_class 'Sermon', namespace => 'App::RRPC';
 
-has 'app', is => 'ro', isa => 'App::RRPC', required => 1, weak_ref => 1;
-has 'pg',  is => 'rw', isa => 'Mojo::Pg',  required => 1, default  => sub { shift->app->pg };
+has 'app', is => 'ro', isa => class_type('App::RRPC'), required => 1, weak_ref => 1;
+has 'pg',  is => 'rw', isa => class_type('Mojo::Pg'),  required => 1, default  => sub { shift->app->pg };
 
 method load(Int $id) {
 	return $self->where('id = ?', $id);
@@ -65,8 +66,7 @@ method _build($query) {
 	\@sermons;
 }
 
-method _load_file($file) {
-	$file = file($file) unless blessed $file and $file->isa('Path::Class::File');
+method _load_file(Path $file is coerce) {
 	$file->basename =~ /\.(\w+)$/;
 	my $method = $self->can('_load_' . $1 . '_file')
 		or die "Unsupported file type: " . $file;
@@ -93,4 +93,4 @@ method _load_yml_file($file) {
 	return $self->_load_yaml_file($file);
 }
 
-__PACKAGE__->meta->make_immutable;
+1
