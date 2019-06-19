@@ -189,7 +189,7 @@ method mp3_file_path {
 }
 
 method to_hash {
-	+{ map { ($_ => $self->$_.'')x!! $self->$_ } @METADATA_ATTRS };
+	+{ map { ($_ => $self->$_.'') } grep { $self->$_ } @METADATA_ATTRS };
 }
 
 method to_yaml {
@@ -222,7 +222,9 @@ method upload(:$always, :$file_mode = 'upload') {
 	}
 
 	for (@METADATA_ATTRS) {
-		$set{$_} = $self->$_ if $existing->{$_} ne $self->$_ or $always;
+		if ($self->$_ && ($always || !defined $existing->{$_} || $existing->{$_} ne $self->$_)) {
+			$set{$_} = $self->$_;
+		}
 	}
 
 	return unless %set;
