@@ -96,9 +96,8 @@ has 'mp3_file',
 			my $wav = $self->wav_file;
 
 			lame(
+				'--preset' => 'voice',
 				-q => 0,
-				-V => $app->mp3_quality,
-				-m => 'm',
 				'--tt' => $self->title,
 				'--ta' => $self->speaker,
 				'--tl' => $app->mp3_album,
