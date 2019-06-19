@@ -1,19 +1,13 @@
 package App::RRPC::API;
 
-use Moose;
-use MooseX::NonMoose;
+use Mojo::Base 'Mojo::UserAgent';
 
-use common::sense;
-
-no strict 'refs';
-
-extends 'Mojo::UserAgent';
-
-has 'api_base', is => 'rw';
-has 'access_key', is => 'rw';
-has 'ca', is => 'rw', default => sub { \undef };
+has 'api_base';
+has 'access_key';
+has 'ca' => sub { \undef }; # Enable CA cert checking -- Mojo disables it by default
 
 for my $method (qw(get patch post put delete)) {
+	no strict 'refs';
 	*$method = sub {
 		my $self = shift;
 		my $url  = Mojo::URL->new($self->api_base . '/' . shift);
@@ -23,16 +17,7 @@ for my $method (qw(get patch post put delete)) {
 		my $tx = $self->${ \"SUPER::$method" }($url, @_);
 		return if $tx->res->code == 404;
 
-		my $res = $tx->success or do {
-			my $content = $tx->res->content->asset->slurp;
-			if ($tx->res->headers->content_type =~ 'text/html') {
-				$content = 'content written to error.html';
-				$tx->res->content->asset->move_to('error.html');
-			}
-			die "HTTP error: " . $tx->error->{message} . "\n" . $content;
-		};
-
-		$res->json;
+		$tx->result->json
 	}
 }
 
