@@ -7,6 +7,7 @@ use MooseX::LazyRequire;
 use MooX::RelatedClasses;
 use Types::Path::Tiny qw(Path);
 use Path::Tiny;
+use Types::Standard qw(Str);
 use namespace::autoclean -except => 'new_with_command';
 use v5.14;
 
@@ -41,6 +42,7 @@ has 'sermons',
 		$self->sermons_class->new(app => $self);
 	};
 
+option 'am_sermon_time',       is => 'ro', isa           => Str, required => 1;
 option 'api_base',             is => 'ro', lazy_required => 1;
 option 'api_key',              is => 'ro', lazy_required => 1;
 option 'api_sermon_files_dir', is => 'rw', isa           => Path, coerce => 1, lazy_required => 1;
@@ -57,6 +59,7 @@ option 'default_speaker',      is => 'ro', lazy_required => 1;
 option 'mp3_album',            is => 'ro', lazy_required => 1;
 option 'mp3_prefix',           is => 'ro', default       => '';
 option 'mp3_quality',          is => 'ro', default       => 5;
+option 'pm_sermon_time',       is => 'ro', isa           => Str, required => 1;
 
 method archive0_dir { $self->archive_dir->child('0-raw') }
 method archive1_dir { $self->archive_dir->child('1-cut') }

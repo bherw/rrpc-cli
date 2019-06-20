@@ -65,9 +65,11 @@ has 'recorded_at',
 		local $_ = $self->identifier;
 		/^\d{4}-\d\d-\d\d[AP]M$/
 			or die "Couldn't determine recorded_at from identifier, please set it explictly: $_";
-		s/AM/T10:00:00/;
-		s/PM/T18:00:00/;
 		ISO8601->parse_datetime($_);
+		my $am = $self->app->am_service_time;
+		my $pm = $self->app->pm_service_time;
+		s/AM/T$am/;
+		s/PM/T$pm/;
 	};
 
 has 'speaker',
