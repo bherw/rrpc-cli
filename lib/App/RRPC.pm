@@ -7,6 +7,7 @@ use MooseX::LazyRequire;
 use MooX::RelatedClasses;
 use Types::Path::Tiny qw(Path);
 use Path::Tiny;
+use Type::Utils qw(class_type);
 use Types::Standard qw(Str);
 use namespace::autoclean -except => 'new_with_command';
 use v5.14;
@@ -26,6 +27,14 @@ has 'api',
 			access_key => $self->api_key,
 			inactivity_timeout => 0,
 		);
+	};
+
+has 'local_timezone',
+	is => 'lazy',
+	isa => class_type('DateTime::TimeZone'),
+	builder => method {
+		require DateTime::TimeZone;
+		DateTime::TimeZone->new(name => 'local');
 	};
 
 has 'pg',

@@ -54,7 +54,7 @@ has 'duration',
 my $PgDateTime = class_type('DateTime')
 	->plus_coercions(Str, sub {
 		require DateTime::Format::Pg;
-		DateTime::Format::Pg->parse_datetime($_)
+		DateTime::Format::Pg->parse_datetime($_)->set_time_zone('UTC')
 	});
 
 has 'recorded_at',
@@ -65,11 +65,11 @@ has 'recorded_at',
 		local $_ = $self->identifier;
 		/^\d{4}-\d\d-\d\d[AP]M$/
 			or die "Couldn't determine recorded_at from identifier, please set it explictly: $_";
-		ISO8601->parse_datetime($_);
 		my $am = $self->app->am_service_time;
 		my $pm = $self->app->pm_service_time;
 		s/AM/T$am/;
 		s/PM/T$pm/;
+		ISO8601->parse_datetime($_)->set_time_zone($self->app->local_tz)->set_time_zone('UTC');
 	};
 
 has 'speaker',
