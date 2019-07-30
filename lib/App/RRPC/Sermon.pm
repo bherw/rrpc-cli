@@ -65,11 +65,13 @@ has 'recorded_at',
 		local $_ = $self->identifier;
 		/^\d{4}-\d\d-\d\d[AP]M$/
 			or die "Couldn't determine recorded_at from identifier, please set it explictly: $_";
-		my $am = $self->app->am_service_time;
-		my $pm = $self->app->pm_service_time;
+		my $am = $self->app->am_sermon_time;
+		my $pm = $self->app->pm_sermon_time;
 		s/AM/T$am/;
 		s/PM/T$pm/;
-		ISO8601->parse_datetime($_)->set_time_zone($self->app->local_tz)->set_time_zone('UTC');
+		ISO8601->parse_datetime($_)
+			->set_time_zone($self->app->local_timezone)
+			->set_time_zone('UTC')
 	};
 
 has 'speaker',
