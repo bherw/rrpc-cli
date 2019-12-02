@@ -33,8 +33,10 @@ method selected_sermons {
 		}
 
 		for (uniq @identifiers) {
-			push @sermons, $self->sermons->load_by_identifier($_)
-				|| say "no metadata found for $_, did you forget to import it?" && exit 1;
+			push @sermons, $self->sermons->load_by_identifier($_) || do {
+				say "no metadata found for $_, did you forget to import it?";
+				exit 1
+			};
 		}
 	}
 	else {
@@ -43,8 +45,10 @@ method selected_sermons {
 				push @sermons, @{ $self->sermons->load_files([$_]) };
 			}
 			else {
-				push @sermons, $self->sermons->load_by_identifier($_)
-					|| say "no metadata found for $_, did you forget to import it?" && exit 1;
+				push @sermons, $self->sermons->load_by_identifier($_) || do {
+					say "no metadata found for $_, did you forget to import it?";
+					exit 1;
+				};
 			}
 		}
 	}
