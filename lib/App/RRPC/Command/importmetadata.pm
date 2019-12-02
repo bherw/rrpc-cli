@@ -11,6 +11,7 @@ method run {
 	my $term;
 
 	for my $sermon (@{ $self->selected_sermons }) {
+		my $tx = $self->pg->db->begin;
 		my $old = $self->sermons->load_by_identifier($sermon->identifier);
 
 		if ($old && $old ne $sermon) {
@@ -39,5 +40,6 @@ method run {
 		}
 
 		$self->sermons->save($sermon);
+		$tx->commit;
 	}
 }
