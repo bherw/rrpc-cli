@@ -32,22 +32,11 @@ method load_files(\@files) {
 }
 
 method save(App::RRPC::Sermon $sermon) {
-	return $sermon->id($self->pg->db->query('
-		insert into sermons (identifier, recorded_at, series, scripture_focus, scripture_reading,
-			scripture_reading_might_be_focus, speaker, title)
-		values (?, ?, ?, ?, ?, ?, ?, ?)
-		on conflict (identifier) do update set
-			recorded_at                      = EXCLUDED.recorded_at,
-			series                           = EXCLUDED.series,
-			scripture_focus                  = EXCLUDED.scripture_focus,
-			scripture_reading                = EXCLUDED.scripture_reading,
-			scripture_reading_might_be_focus = EXCLUDED.scripture_reading_might_be_focus,
-			speaker                          = EXCLUDED.speaker,
-			title                            = EXCLUDED.title
-		returning id',
-		map { $sermon->$_ } qw(identifier recorded_at series scripture_focus scripture_reading
-			scripture_reading_might_be_focus speaker title)
-	)->hash->{id});
+	my %values = map { ($_ => $sermon->$_) } qw(identifier recorded_at series scripture_focus scripture_reading scripture_reading_might_be_focus speaker title);
+	my $res = $self->pg->db->insert('sermons', \%values, {returning => 'id', on_conflict => [identifier => \%values]});
+	my $id = $res->hash->{id} or die "Failed to get id from " . $res;
+	$sermon->id($id);
+	return $sermon;
 }
 
 method to_yaml(\@sermons) {
