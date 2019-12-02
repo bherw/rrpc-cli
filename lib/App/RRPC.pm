@@ -75,13 +75,46 @@ method archive1_dir { $self->archive_dir->child('1-cut') }
 method archive2_dir { $self->archive_dir->child('2-final') }
 method archived_mp3_dir { $self->archive_dir->child('mp3') }
 
-method upload_sermons(\@sermons, :$upload_files = 1) {
-	if ($upload_files) {
-		# Make sure the source files exist first.
-		$_->mp3_file for @sermons;
+method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$create_series = 0) {
+	my $api = $self->api;
+
+	# Validate
+	for my $sermon (@sermons) {
+		unless ($sermon->has_mp3_file) {
+			say 'No source file found for ' . $sermon->identifier;
+			exit 1;
+		}
+
+		my $speaker = $api->get_speaker_by_name($sermon->speaker);
+		unless ($speaker) {
+			if ($create_speaker) {
+				$api->create_speaker(name => $sermon->speaker);
+			}
+			else {
+				say "No such speaker: @{[$sermon->speaker]} for @{[$sermon->identifier]}";
+				say "To create the speaker, rerun with --create_speaker";
+				exit 1;
+			}
+		}
+
+		if (defined $sermon->series) {
+			my $series = $api->get_series_by_name_and_speaker_id($sermon->series, $speaker->{id});
+			unless ($series) {
+				if ($create_series) {
+					$api->create_series(name => $sermon->series, speaker_id => $speaker->{id});
+				}
+				else {
+					say "No such series by @{[$sermon->speaker]} named '@{[$sermon->series]}' for @{[$sermon->identifier]}";
+					say "To create the series, rerun with --create_series";
+					exit 1;
+				}
+			}
+		}
 	}
 
-	$_->upload($upload_files) for @sermons;
+	for my $sermon (@sermons) {
+		$api->set_sermon($sermon, overwrite_audio => $overwrite_audio);
+	}
 }
 
 1;

@@ -28,6 +28,7 @@ has 'identifier', is => 'rw', isa => Str, required => 1;
 has [qw(scripture_reading title)], is => 'rw', isa => Str, required => 1;
 has [qw(scripture_focus series)], is => 'rw', isa => Maybe[Str];
 has 'scripture_reading_might_be_focus', is => 'rw', isa => Bool, default => 0;
+has [qw(series_id speaker_id)], is => 'rw', isa => Int;
 
 has 'audio_peaks_file',
 	is => 'lazy',
@@ -192,6 +193,10 @@ method mp3_file_path {
 	-f $archived ? $archived : $app->base_dir->child($app->mp3_prefix . $self->identifier . '.mp3');
 }
 
+method mp3_file_name {
+	$self->app->mp3_prefix . $self->identifier . '.mp3'
+}
+
 method to_hash {
 	+{ map { ($_ => $self->$_.'') } grep { $self->$_ } @METADATA_ATTRS };
 }
@@ -199,49 +204,6 @@ method to_hash {
 method to_yaml {
 	require YAML;
 	YAML::Dump($self->to_hash)
-}
-
-method upload(Bool :$always = 0, Enum[qw(upload existing remote)] :$file_mode = 'upload') {
-	my $app = $self->app;
-	my $existing = $app->api->get('sermon/' . $self->identifier)->andand->{data} // {};
-	my %set;
-
-	if (!$existing->{audio_url} || $always) {
-		if ($file_mode eq 'upload') {
-			$set{audio} = {
-				file     => $self->mp3_file->stringify,
-				filename => $app->mp3_prefix . $self->identifier . '.mp3',
-			};
-		}
-		elsif ($file_mode eq 'existing') {
-			$set{audio} = 'file://'
-				. $app->api_sermon_files_dir->file($app->mp3_prefix . $self->identifier . '.mp3');
-		}
-		elsif ($file_mode eq 'remote') {
-			$set{audio} = $app->audio_url_base . '/' . $self->identifier . '.mp3';
-		}
-		else {
-			die "Invalid file mode: $file_mode";
-		}
-	}
-
-	for (@METADATA_ATTRS) {
-		if ($self->$_ && ($always || !defined $existing->{$_} || $existing->{$_} ne $self->$_)) {
-			$set{$_} = $self->$_;
-		}
-	}
-
-	return unless %set;
-
-	$set{identifier} = $self->identifier;
-	if (keys %$existing) {
-		$app->api->patch('sermon/' . $self->identifier, form => \%set);
-	}
-	else {
-		$app->api->post('sermon', form => \%set);
-	}
-
-	return;
 }
 
 method wav_file_path {
