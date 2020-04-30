@@ -87,9 +87,9 @@ method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$
 				$api->create_speaker(name => $sermon->speaker);
 			}
 			else {
-				say "No such speaker: @{[$sermon->speaker]} for @{[$sermon->identifier]}";
-				say "To create the speaker, rerun with --create_speaker";
-				exit 1;
+				say "No such speaker: @{ [ $sermon->speaker ] } for @{ [ $sermon->identifier ] }";
+				say "To create the speaker on the RRPC sermons site, rerun with --create_speaker";
+				return;
 			}
 		}
 
@@ -101,8 +101,8 @@ method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$
 				}
 				else {
 					say "No such series by @{[$sermon->speaker]} named '@{[$sermon->series]}' for @{[$sermon->identifier]}";
-					say "To create the series, rerun with --create_series";
-					exit 1;
+					say "To create the series on the RRPC sermons site, rerun with --create_series";
+					return;
 				}
 			}
 		}
