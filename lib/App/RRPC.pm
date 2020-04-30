@@ -38,7 +38,7 @@ has 'local_timezone',
 	};
 
 has 'pg',
-	is => 'lazy',
+	is      => 'lazy',
 	builder => method {
 		my $pg = $self->pg_class->new($self->db_connection_string);
 		$pg->auto_migrate(1)->migrations->name('rrpc_cli')->from_data;
@@ -46,14 +46,14 @@ has 'pg',
 	};
 
 has 'sermons',
-	is => 'lazy',
+	is      => 'lazy',
 	builder => method {
 		$self->sermons_class->new(app => $self);
 	};
 
-option 'am_sermon_time',       is => 'ro', isa           => Str, required => 1;
-option 'api_base',             is => 'ro', lazy_required => 1;
-option 'api_key',              is => 'ro', lazy_required => 1;
+option 'am_sermon_time', is => 'ro', isa => Str, required => 1;
+option 'api_base', is => 'ro', lazy_required => 1;
+option 'api_key', is => 'ro', lazy_required => 1;
 option 'api_sermon_files_dir', is => 'rw', isa           => Path, coerce => 1, lazy_required => 1;
 option 'archive_dir',
 	is      => 'lazy',
@@ -61,14 +61,14 @@ option 'archive_dir',
 	coerce  => 1,
 	default => method { $self->base_dir->child('archive') };
 option 'audio_peaks_resolution', is => 'ro', isa => 'Int', default => 4096;
-option 'audio_url_base',       is => 'ro', lazy_required => 1;
-option 'base_dir',             is => 'ro', isa           => Path, coerce => 1, default => sub { path('.') };
-option 'db_connection_string', is => 'ro', default       => 'postgresql:///rrpc_cli';
-option 'default_speaker',      is => 'ro', lazy_required => 1;
-option 'mp3_album',            is => 'ro', lazy_required => 1;
-option 'mp3_prefix',           is => 'ro', default       => '';
-option 'mp3_quality',          is => 'ro', default       => 5;
-option 'pm_sermon_time',       is => 'ro', isa           => Str, required => 1;
+option 'audio_url_base', is => 'ro', lazy_required => 1;
+option 'base_dir', is => 'ro', isa => Path, coerce => 1, default => sub { path('.') };
+option 'db_connection_string', is => 'ro', default => 'postgresql:///rrpc_cli';
+option 'default_speaker', is => 'ro', lazy_required => 1;
+option 'mp3_album', is => 'ro', lazy_required => 1;
+option 'mp3_prefix', is => 'ro', default => '';
+option 'mp3_quality', is => 'ro', default => 5;
+option 'pm_sermon_time', is => 'ro', isa => Str, required => 1;
 
 method archive0_dir { $self->archive_dir->child('0-raw') }
 method archive1_dir { $self->archive_dir->child('1-cut') }
