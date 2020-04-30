@@ -79,12 +79,8 @@ method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$
 	my $api = $self->api;
 
 	# Validate
+	$self->_assert_mp3_available(@sermons);
 	for my $sermon (@sermons) {
-		unless ($sermon->has_mp3_file) {
-			say 'No source file found for ' . $sermon->identifier;
-			exit 1;
-		}
-
 		my $speaker = $api->get_speaker_by_name($sermon->speaker);
 		unless ($speaker) {
 			if ($create_speaker) {
@@ -114,6 +110,15 @@ method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$
 
 	for my $sermon (@sermons) {
 		$api->set_sermon($sermon, overwrite_audio => $overwrite_audio);
+	}
+}
+
+method _assert_mp3_available(@sermons) {
+	for my $sermon (@sermons) {
+		unless ($sermon->has_mp3_file) {
+			say 'No source file found for ' . $sermon->identifier;
+			exit 1;
+		}
 	}
 }
 
