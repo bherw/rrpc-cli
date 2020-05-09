@@ -106,7 +106,7 @@ method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$
 	}
 	return if $unknown_speakers || $unknown_series;
 
-	for my $sermon (@sermons) {
+	for my $sermon (sort { $a->identifier cmp $b->identifier } @sermons) {
 		$api->set_sermon($sermon, overwrite_audio => $overwrite_audio);
 	}
 }
