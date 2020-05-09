@@ -14,24 +14,20 @@ use v5.14;
 
 app_namespace 'App::RRPC::Command';
 
-related_class [qw(Sermons)];
-related_class {API => 'api'};
-related_class { '+Mojo::Asset::File' => 'asset'};
+related_class [ qw(Sermons) ];
+related_class { API => 'api' };
+related_class { '+Mojo::Asset::File' => 'asset' };
 related_class 'Pg', namespace => 'Mojo';
 
 has 'api',
-	is => 'lazy',
+	is      => 'lazy',
 	builder => method {
-		$self->api_class->new(
-			api_base => $self->api_base,
-			access_key => $self->api_key,
-			inactivity_timeout => 0,
-		);
+		$self->api_class->new(api_base => $self->api_base, access_key => $self->api_key, inactivity_timeout => 0);
 	};
 
 has 'local_timezone',
-	is => 'lazy',
-	isa => class_type('DateTime::TimeZone'),
+	is      => 'lazy',
+	isa     => class_type('DateTime::TimeZone'),
 	builder => method {
 		require DateTime::TimeZone;
 		DateTime::TimeZone->new(name => 'local');
