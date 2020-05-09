@@ -12,6 +12,7 @@ option 'create_speaker',  is => 'ro', isa => 'Bool', default => 0;
 option 'overwrite_audio', is => 'ro', isa => 'Bool', default => 0;
 
 method run {
+	$|++;
 	$self->upload_sermons(
 		$self->selected_sermons,
 		create_series   => !!$self->create_series,
