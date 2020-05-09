@@ -80,6 +80,7 @@ method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$
 
 	# Validate
 	$self->_assert_mp3_available(@sermons);
+	my ($unknown_speakers, $unknown_series);
 	for my $sermon (@sermons) {
 		my $speaker = $api->get_speaker_by_name($sermon->speaker);
 		unless ($speaker) {
@@ -89,7 +90,7 @@ method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$
 			else {
 				say "No such speaker: @{ [ $sermon->speaker ] } for @{ [ $sermon->identifier ] }";
 				say "To create the speaker on the RRPC sermons site, rerun with --create_speaker";
-				return;
+				$unknown_speakers++;
 			}
 		}
 
@@ -100,13 +101,14 @@ method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$
 					$api->create_series(name => $sermon->series, speaker_id => $speaker->{id});
 				}
 				else {
-					say "No such series by @{[$sermon->speaker]} named '@{[$sermon->series]}' for @{[$sermon->identifier]}";
+					say "No such series by @{ [ $sermon->speaker ] } named '@{ [ $sermon->series ] }' for @{ [ $sermon->identifier ] }";
 					say "To create the series on the RRPC sermons site, rerun with --create_series";
-					return;
+					$unknown_series++;
 				}
 			}
 		}
 	}
+	return if $unknown_speakers || $unknown_series;
 
 	for my $sermon (@sermons) {
 		$api->set_sermon($sermon, overwrite_audio => $overwrite_audio);
