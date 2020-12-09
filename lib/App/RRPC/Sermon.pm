@@ -197,6 +197,8 @@ method mp3_file_name {
 	$self->app->mp3_prefix . $self->identifier . '.mp3'
 }
 
+method scripture { $self->scripture_focus || $self->scripture_reading }
+
 method to_hash {
 	+{ map { ($_ => $self->$_.'') } grep { $self->$_ } @METADATA_ATTRS };
 }
