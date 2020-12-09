@@ -119,6 +119,13 @@ method set_sermon(App::RRPC::Sermon $sermon, :$overwrite_audio = 0) {
 	return;
 }
 
+method delete_sermon($sermon) {
+	my $id = ref $sermon ? $sermon->{identifier} : $sermon;
+	my $res = $self->get('sermons/' . $id);
+	$self->_throw_error('Error deleting sermon', $res) unless $res->code == 200;
+	return 1;
+}
+
 fun _form($data) {
 	(form => { _form_rec($data) })
 }
