@@ -71,7 +71,16 @@ method archive1_dir { $self->archive_dir->child('1-cut') }
 method archive2_dir { $self->archive_dir->child('2-final') }
 method archived_mp3_dir { $self->archive_dir->child('mp3') }
 
-method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$create_series = 0) {
+method upload_sermons(@_) {
+	if ($self->{api_key}) {
+		$self->upload_sermons_rrpc_api(@_);
+	}
+	else {
+		say 'RRPC API key not configured, not uploading to RRPC Sermons';
+	}
+}
+
+method upload_sermons_rrpc_api(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$create_series = 0) {
 	my $api = $self->api;
 
 	# Validate
