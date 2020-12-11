@@ -67,13 +67,11 @@ method archive2_dir { $self->archive_dir->child('2-final') }
 method archived_mp3_dir { $self->archive_dir->child('mp3') }
 
 method upload_sermons(@_) {
-    my @sermons = @{ $_[0] };
-    $self->_assert_mp3_available(@sermons);
+    my @remotes;
 
 	if ($self->{api_key}) {
 		require App::RRPC::Remote::RrpcApi;
-		my $rrpc = App::RRPC::Remote::RrpcApi->new(api_base => $self->api_base, api_key => $self->api_key);
-		$rrpc->upload_sermons(@_);
+		push @remotes, App::RRPC::Remote::RrpcApi->new(api_base => $self->api_base, api_key => $self->api_key);
 	}
 	else {
 		say 'RRPC API key not configured, not uploading to RRPC Sermons';
@@ -81,17 +79,26 @@ method upload_sermons(@_) {
 
 	if ($self->{sermon_audio_api_key}) {
 		require App::RRPC::Remote::SermonAudio;
-		my $sa = App::RRPC::Remote::SermonAudio->new(
+		push @remotes, App::RRPC::Remote::SermonAudio->new(
             api_key => $self->sermon_audio_api_key,
             broadcaster_id => $self->sermon_audio_broadcaster_id,
             language_code => $self->sermon_audio_language_code,
             speaker_name_map => $self->sermon_audio_speaker_name_map
         );
-		$sa->upload_sermons(@_);
 	}
 	else {
 		say "SermonAudio API key not configured, not uploading to SermonAudio.";
 	}
+
+	# Validate
+	my @sermons = @{ $_[0] };
+	$self->_assert_mp3_available(@sermons);
+	for (@remotes) {
+		return unless $_->validate_upload_sermons(@_);
+	}
+
+	# Upload
+	$_->upload_sermons(@_) for @remotes;
 }
 
 method _assert_mp3_available(@sermons) {

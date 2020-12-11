@@ -22,15 +22,22 @@ has 'api_key',
     is       => 'ro',
     required => 1;
 
-
-
 method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$create_series = 0) {
-    print 'Validating sermons for upload to RRPC Sermons... ';
 
     my $api = $self->api;
+    for my $sermon (sort { $a->identifier cmp $b->identifier } @sermons) {
+        print 'Updating ' . $sermon->identifier . ' on RRPC Sermons... ';
+        $api->set_sermon($sermon, overwrite_audio => $overwrite_audio);
+        say 'done.';
+    }
+}
 
-    # Validate
-    my ($unknown_speakers, $unknown_series);
+method validate_upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$create_series = 0) {
+    print 'Validating sermons for upload to RRPC Sermons... ';
+
+    my $api     = $self->api;
+    my $unknown = 0;
+
     for my $sermon (@sermons) {
         my $speaker = $api->get_speaker_by_name($sermon->speaker);
         unless ($speaker) {
@@ -41,7 +48,7 @@ method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$
                 say;
                 say "No such speaker: @{[ $sermon->speaker ]} for @{[ $sermon->identifier ]}";
                 say "To create the speaker on the RRPC sermons site, rerun with --create_speaker";
-                $unknown_speakers++;
+                $unknown++;
             }
         }
 
@@ -55,19 +62,15 @@ method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$
                     say;
                     say "No such series by @{[ $sermon->speaker ]} named '@{[ $sermon->series ]}' for @{[ $sermon->identifier ]}";
                     say "To create the series on the RRPC sermons site, rerun with --create_series";
-                    $unknown_series++;
+                    $unknown++;
                 }
             }
         }
     }
-    return if $unknown_speakers || $unknown_series;
-    say 'OK';
 
-    for my $sermon (sort { $a->identifier cmp $b->identifier } @sermons) {
-        print 'Updating ' . $sermon->identifier . ' on RRPC Sermons... ';
-        $api->set_sermon($sermon, overwrite_audio => $overwrite_audio);
-        say 'done.';
-    }
+    return if $unknown;
+    say 'OK';
+    return 1;
 }
 
 1;

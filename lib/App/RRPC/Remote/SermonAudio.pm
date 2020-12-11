@@ -44,41 +44,9 @@ has 'speaker_name_map',
 
 
 method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$create_series = 0) {
-
-    # Validate
-    print 'Validating sermons for upload to SermonAudio...';
-
-    my $sa = $self->api;
-    my $unknown_speakers;
-    for my $speaker (uniq map { $_->speaker } @sermons) {
-        my $sa_speaker = $self->speaker_name_map->{$speaker} // $speaker;
-
-        if (!await_get($sa->speaker_exists($sa_speaker)) && !$create_speaker) {
-            say '';
-            say "No such speaker '$speaker' exists on SermonAudio.";
-            say "Please confirm that no similar speaker, for example 'Pastor $speaker' exists on SermonAudio.";
-            say "If such a speaker does exist, add \"$speaker: Pastor $speaker\" to the sermon_audio_speaker_name_map: option in the config file located at " . $self->config;
-            say "To create the speaker, rerun with --create_speaker";
-            $unknown_speakers++;
-        }
-    }
-
-    my $unknown_series;
-    for my $series (uniq grep { defined } map { $_->series } @sermons) {
-        next if await_get $sa->series_exists($self->sermon_audio_broadcaster_id, $series);
-
-        if (!$create_series) {
-            say '';
-            say "No series called '$series' exists on SermonAudio. Check that the series name is not misspelled.";
-            say "If this is a new series, rerun this command with --create_series to create the series on SermonAudio.";
-            $unknown_series++;
-        }
-    }
-    return if $unknown_speakers || $unknown_series;
-    say ' OK';
-
     my @publish_queue;
     my $sermons_on_sa = $self->_sermons_on_sa(\@sermons);
+    my $sa            = $self->api;
 
     for my $sermon (sort { $a->identifier cmp $b->identifier } @sermons) {
         my $sa_speaker = $self->speaker_name_map->{$sermon->speaker} // $sermon->speaker;
@@ -154,6 +122,42 @@ method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$
         await_get $sa->publish_sermon($sermon);
         say ' done.';
     }
+}
+
+method validate_upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$create_series = 0) {
+    print 'Validating sermons for upload to SermonAudio...';
+
+    my $sa      = $self->api;
+    my $unknown = 0;
+    if (!$create_speaker) {
+        for my $speaker (uniq map { $_->speaker } @sermons) {
+            my $sa_speaker = $self->speaker_name_map->{$speaker} // $speaker;
+
+            if (!await_get($sa->speaker_exists($sa_speaker))) {
+                say '';
+                say "No such speaker '$speaker' exists on SermonAudio.";
+                say "Please confirm that no similar speaker, for example 'Pastor $speaker' exists on SermonAudio.";
+                say "If such a speaker does exist, add \"$speaker: Pastor $speaker\" to the sermon_audio_speaker_name_map: option in the config file located at " . $self->config;
+                say "To create the speaker, rerun with --create_speaker";
+                $unknown++;
+            }
+        }
+    }
+
+    if (!$create_series) {
+        for my $series (uniq grep { defined } map { $_->series } @sermons) {
+            if (!(await_get $sa->series_exists($self->sermon_audio_broadcaster_id, $series))) {
+                say '';
+                say "No series called '$series' exists on SermonAudio. Check that the series name is not misspelled.";
+                say "If this is a new series, rerun this command with --create_series to create the series on SermonAudio.";
+                $unknown++;
+            }
+        }
+    }
+
+    return if $unknown;
+    say ' OK';
+    return 1;
 }
 
 method _sermons_on_sa(\@sermons) {
