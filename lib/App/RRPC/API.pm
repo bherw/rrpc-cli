@@ -77,7 +77,7 @@ method set_sermon(App::RRPC::Sermon $sermon, :$overwrite_audio = 0) {
 	my %set;
 
 	for my $attr (@SERMON_SCALAR_ATTRS) {
-		if (!defined $existing || $sermon->$attr ne $existing->{$attr}) {
+		if (!defined $existing || ($sermon->$attr // '') ne ($existing->{$attr} // '')) {
 			$set{$attr} = $sermon->$attr;
 		}
 	}
@@ -91,7 +91,7 @@ method set_sermon(App::RRPC::Sermon $sermon, :$overwrite_audio = 0) {
 	if (defined $sermon->series) {
 		my $series = $self->get_series_by_name_and_speaker_id($sermon->series, $speaker->{id})
 			or die "No series by @{[$speaker->name]} with name @{[$sermon->series]}";
-		if (!defined $existing || $existing->{series_id} != $sermon->series_id) {
+		if (!defined $existing || ($existing->{series_id} // -1) != ($sermon->series_id // -1)) {
 			$set{series_id} = $series->{id};
 		}
 	}
