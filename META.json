@@ -1,0 +1,68 @@
+{
+   "abstract" : "Manage sermons (RRPC custom code)",
+   "author" : [
+      "Benjamin Herweyer <benjamin.herweyer@gmail.com>"
+   ],
+   "dynamic_config" : 1,
+   "license" : [
+      "artistic_2"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : 2
+   },
+   "name" : "App-RRPC",
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "Test::More" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "Module::Build::Tiny" : "0",
+            "version" : "0.77"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "DateTime::Format::ISO8601" : "0",
+            "Kavorka" : "0",
+            "IPC::Run" : "0",
+            "List::AllUtils" : "0",
+            "List::Util" : "0",
+            "Mojolicious" : "0",
+            "Mojo::Pg" : "0",
+            "Moose" : "0",
+            "MooseX::App" : "0",
+            "MooseX::AttributeShortcuts" : "0",
+            "MooseX::LazyRequire" : "0",
+            "MooseX::RelatedClasses" : "0.012",
+            "MooX::StrictConstructor" : "0",
+            "Net::SermonAudio" : "0",
+            "Scalar::Andand" : "0",
+            "Sys::CPU" : "0",
+            "Types::Path::Tiny" : "0",
+            "Parallel::ForkManager" : "0",
+            "Path::Class" : "0",
+            "Path::Tiny" : "0",
+            "Type::Utils" : "0",
+            "Types::Standard" : "0",
+            "YAML": "0",
+            "common::sense" : "0",
+            "namespace::autoclean" : "0",
+            "perl" : "v5.14.0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "license" : [
+         "http://www.perlfoundation.org/artistic_license_2_0"
+      ],
+      "repository" : {
+         "url" : "https://github.com/bherw/rrpc-cli"
+      }
+   },
+   "version" : "v0.1"
+}
