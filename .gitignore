@@ -1,5 +1,7 @@
+.idea/perl5local.xml
 Build
 blib
 _build_params
+_Deparsed_XSubs.pm
 MYMETA.json
 MYMETA.yml
