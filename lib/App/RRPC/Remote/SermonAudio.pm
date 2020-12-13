@@ -26,6 +26,11 @@ has 'api_key',
     isa      => Str,
     required => 1;
 
+has 'app',
+    is       => 'ro',
+    required => 1,
+    weak_ref => 1;
+
 has 'broadcaster_id',
     is       => 'ro',
     isa      => Str,
@@ -137,7 +142,7 @@ method validate_upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speake
                 say '';
                 say "No such speaker '$speaker' exists on SermonAudio.";
                 say "Please confirm that no similar speaker, for example 'Pastor $speaker' exists on SermonAudio.";
-                say "If such a speaker does exist, add \"$speaker: Pastor $speaker\" to the sermon_audio_speaker_name_map: option in the config file located at " . $self->config;
+                say "If such a speaker does exist, add \"$speaker: Pastor $speaker\" to the sermon_audio_speaker_name_map: option in the config file located at " . $self->app->config;
                 say "To create the speaker, rerun with --create_speaker";
                 $unknown++;
             }
@@ -146,7 +151,7 @@ method validate_upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speake
 
     if (!$create_series) {
         for my $series (uniq grep { defined } map { $_->series } @sermons) {
-            if (!(await_get $sa->series_exists($self->sermon_audio_broadcaster_id, $series))) {
+            if (!(await_get $sa->series_exists($self->broadcaster_id, $series))) {
                 say '';
                 say "No series called '$series' exists on SermonAudio. Check that the series name is not misspelled.";
                 say "If this is a new series, rerun this command with --create_series to create the series on SermonAudio.";

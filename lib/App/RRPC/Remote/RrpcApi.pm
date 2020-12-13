@@ -22,6 +22,12 @@ has 'api_key',
     is       => 'ro',
     required => 1;
 
+has 'app',
+    is       => 'ro',
+    required => 1,
+    weak_ref => 1;
+
+
 method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$create_series = 0) {
 
     my $api = $self->api;
@@ -45,7 +51,7 @@ method validate_upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speake
                 $api->create_speaker(name => $sermon->speaker);
             }
             else {
-                say;
+                say '';
                 say "No such speaker: @{[ $sermon->speaker ]} for @{[ $sermon->identifier ]}";
                 say "To create the speaker on the RRPC sermons site, rerun with --create_speaker";
                 $unknown++;
@@ -59,7 +65,7 @@ method validate_upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speake
                     $api->create_series(name => $sermon->series, speaker_id => $speaker->{id});
                 }
                 else {
-                    say;
+                    say '';
                     say "No such series by @{[ $sermon->speaker ]} named '@{[ $sermon->series ]}' for @{[ $sermon->identifier ]}";
                     say "To create the series on the RRPC sermons site, rerun with --create_series";
                     $unknown++;

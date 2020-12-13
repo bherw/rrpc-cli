@@ -71,7 +71,7 @@ method upload_sermons(@_) {
 
 	if ($self->{api_key}) {
 		require App::RRPC::Remote::RrpcApi;
-		push @remotes, App::RRPC::Remote::RrpcApi->new(api_base => $self->api_base, api_key => $self->api_key);
+		push @remotes, App::RRPC::Remote::RrpcApi->new(api_base => $self->api_base, api_key => $self->api_key, app => $self);
 	}
 	else {
 		say 'RRPC API key not configured, not uploading to RRPC Sermons';
@@ -81,6 +81,7 @@ method upload_sermons(@_) {
 		require App::RRPC::Remote::SermonAudio;
 		push @remotes, App::RRPC::Remote::SermonAudio->new(
             api_key => $self->sermon_audio_api_key,
+			app => $self,
             broadcaster_id => $self->sermon_audio_broadcaster_id,
             language_code => $self->sermon_audio_language_code,
             speaker_name_map => $self->sermon_audio_speaker_name_map
