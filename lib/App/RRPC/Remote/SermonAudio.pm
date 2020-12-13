@@ -10,6 +10,7 @@ use Net::SermonAudio::Util qw(await_get);
 use Types::Standard qw(HashRef Str);
 
 use constant MEDIA_PROCESSING_POLL_INTERVAL => 15;
+use constant SCRIPTURE_REF_MAX => 4;
 
 related_class { 'Net::SermonAudio::API::Broadcaster' => 'sermon_audio' }, namespace => undef;
 
@@ -56,16 +57,21 @@ method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$
     for my $sermon (sort { $a->identifier cmp $b->identifier } @sermons) {
         my $sa_speaker = $self->speaker_name_map->{$sermon->speaker} // $sermon->speaker;
         my $remote     = $sermons_on_sa->{$sermon->identifier};
+
+        # Cap references at 4 -- any more and SA's API returns an invalid API response (not an error)
+        my @scripture_refs = split ';', $sermon->scripture;
+        my $scripture      = @scripture_refs > SCRIPTURE_REF_MAX ? join(';', splice(@scripture_refs, 0, SCRIPTURE_REF_MAX)) : $sermon->scripture;
+
         if ($remote && !(
             $remote->full_title eq $sermon->title
                 && ($remote->subtitle // '') eq ($sermon->series // '')
                 && $remote->speaker->display_name eq $sa_speaker
-                && $remote->bible_text eq $sermon->scripture)) {
+                && _scripture_eq($remote->bible_text, $scripture))) {
 
             say "non-matching title" unless $remote->full_title eq $sermon->title;
             say "non-matching series" unless $remote->subtitle // '' eq $sermon->series // '';
             say 'non-matching speaker' unless $remote->speaker->display_name eq $sa_speaker;
-            say "non-matching scripture: @{[ $remote->bible_text ]} != @{[ $sermon->scripture ]}" unless $remote->bible_text eq $sermon->scripture;
+            say "non-matching scripture: @{[ $remote->bible_text ]} != @{[ $scripture ]}" unless _scripture_eq($remote->bible_text, $scripture);
 
             print "Updating " . $sermon->identifier . ' on SermonAudio...';
             $remote = await_get $sa->update_sermon(
@@ -84,7 +90,7 @@ method upload_sermons(\@sermons, :$overwrite_audio = 0, :$create_speaker = 0, :$
             print 'Adding ' . $sermon->identifier . ' to SermonAudio...';
             $remote = await_get $sa->create_sermon(
                 accept_copyright => 1,
-                bible_text       => $sermon->scripture,
+                bible_text       => $scripture,
                 event_type       => 'Sunday - ' . $sermon->identifier =~ s/\d+-\d+-\d+//r,
                 full_title       => $sermon->title,
                 language_code    => $self->language_code,
@@ -173,6 +179,18 @@ method _sermons_on_sa(\@sermons) {
     my $sermon_set      = await_get $self->api->list_sermons_between($first_preached, $last_preached, include_drafts => 1);
     my %sermons_on_site = map { (_sa_sermon_identifier($_) => $_) } @{$sermon_set->results};
     return \%sermons_on_site;
+}
+
+fun _scripture_eq(Str $a, Str $b) {
+    my @a = map { chomp } split ';', $a;
+    my @b = map { chomp } split ';', $b;
+    return unless @a == @b;
+    my %b;
+    @b{@b} = ();
+    for (@a) {
+        return unless exists $b{$_};
+    }
+    return 1;
 }
 
 fun _sa_sermon_identifier($sermon) {
